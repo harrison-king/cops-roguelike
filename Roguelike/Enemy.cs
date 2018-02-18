@@ -2,9 +2,9 @@
 
 namespace Roguelike
 {
-    public class Cop: Entity
+    public class Enemy : Entity
     {
-        public Cop()
+        public Enemy()
         {
         }
     }
