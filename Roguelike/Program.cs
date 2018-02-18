@@ -125,8 +125,7 @@ namespace Roguelike
         private static void GenerateEnemies()
         {
             int enemyNumber = _random.Next(10, 20);
-                
-                      for (int i = 0; i < enemyNumber; ++i)
+            for (int i = 0; i < enemyNumber; ++i)
             {
                 Enemy enemy = new Enemy()
                 {
