@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Roguelike.Common.Console;
 
 namespace Roguelike
 {
@@ -11,14 +12,15 @@ namespace Roguelike
         private static Random _random = new Random();
 
         private static Cop _player = new Cop();
-        private static List<Enemy> _enemies = new List<Enemy>();
+        private static Map _map;
 
         public static void Main(string[] args)
         {
-            Console.CursorVisible = false;
-            Console.Clear();
+            ConsoleScreen.Initialize(MAP_WIDTH, MAP_HEIGHT, ConsoleColor.Black, ConsoleColor.White);
+            ConsoleScreen.Clear();
 
-            GenerateEnemies();
+            MapGenerator mapGenerator = new MapGenerator(_random, MAP_WIDTH, MAP_HEIGHT);
+            _map = mapGenerator.GenerateMap();
             RunGame();
 
             Console.BackgroundColor = ConsoleColor.Black;
@@ -26,7 +28,7 @@ namespace Roguelike
             Console.Clear();
 
             // Check if we won.
-            if (_enemies.Count == 0)
+            if (_map.Enemies.Count == 0)
             {
                 Console.WriteLine("You won!!!");
             }
@@ -55,7 +57,7 @@ namespace Roguelike
                 }
 
                 // Check if we won (no enemies left).
-                if (_enemies.Count == 0)
+                if (_map.Enemies.Count == 0)
                 {
                     isRunning = false;
                 }
@@ -64,20 +66,42 @@ namespace Roguelike
 
         private static void DisplayGame()
         {
-            Console.Clear();
-
+            // Display the map.
+            for (int y = 0; y < _map.Height; ++y)
+            {
+                for (int x = 0; x < _map.Width; ++x)
+                {
+                    Tile tile = _map.Tiles[x, y];
+                    switch (tile)
+                    {
+                        case Tile.HorizontalWall:
+                            ConsoleScreen.Write(x, y, '-');
+                            break;
+                        case Tile.VerticalWall:
+                            ConsoleScreen.Write(x, y, '|');
+                            break;
+                        case Tile.Door:
+                            ConsoleScreen.Write(x, y, '+', ConsoleColor.Green, ConsoleColor.Black);
+                            break;
+                        case Tile.Floor:
+                        default:
+                            ConsoleScreen.Write(x, y, ' ');
+                            break;
+                    }
+                }
+            }
+                
             // Display the player.
-            Console.ForegroundColor = ConsoleColor.DarkCyan;
-            Console.SetCursorPosition(_player.X, _player.Y);
-            Console.Write('@');
+            ConsoleScreen.Write(_player.X, _player.Y, '@', ConsoleColor.DarkCyan, ConsoleColor.Black);
 
             // Display the enemies.
-            Console.ForegroundColor = ConsoleColor.Red;
-            foreach (Enemy enemy in _enemies)
+            foreach (Enemy enemy in _map.Enemies)
             {
-                Console.SetCursorPosition(enemy.X, enemy.Y);
-                Console.Write('e');
+                ConsoleScreen.Write(enemy.X, enemy.Y, 'e', ConsoleColor.Red, ConsoleColor.Black);
             }
+
+            // Draw to the console screen.
+            ConsoleScreen.Draw();
         }
 
         private static void ProcessInput(ConsoleKey input)
@@ -86,28 +110,48 @@ namespace Roguelike
             switch (input)
             {
                 case ConsoleKey.LeftArrow:
-                    if (_player.X > 0)
+                    if (_player.X > 0
+                        && _map.Tiles[_player.X - 1, _player.Y] != Tile.HorizontalWall
+                        && _map.Tiles[_player.X - 1, _player.Y] != Tile.VerticalWall)
+                    {
                         --_player.X;
+                    }
+
                     break;
                 case ConsoleKey.RightArrow:
-                    if (_player.X + 1 < MAP_WIDTH)
+                    if (_player.X + 1 < MAP_WIDTH
+                        && _map.Tiles[_player.X + 1, _player.Y] != Tile.HorizontalWall
+                        && _map.Tiles[_player.X + 1, _player.Y] != Tile.VerticalWall)
+                    {
                         ++_player.X;
+                    }
+
                     break;
                 case ConsoleKey.UpArrow:
-                    if (_player.Y > 0)
+                    if (_player.Y > 0
+                        && _map.Tiles[_player.X, _player.Y - 1] != Tile.HorizontalWall
+                        && _map.Tiles[_player.X, _player.Y - 1] != Tile.VerticalWall)
+                    {
                         --_player.Y;
+                    }
+
                     break;
                 case ConsoleKey.DownArrow:
-                    if (_player.Y + 1 < MAP_HEIGHT)
+                    if (_player.Y + 1 < MAP_HEIGHT
+                        && _map.Tiles[_player.X, _player.Y + 1] != Tile.HorizontalWall
+                        && _map.Tiles[_player.X, _player.Y + 1] != Tile.VerticalWall)
+                    {
                         ++_player.Y;
+                    }
+
                     break;
             }
 
             // Check if we killed any enemies.
             int killedEnemyIndex = -1;
-            for (int i = 0; i < _enemies.Count; ++i)
+            for (int i = 0; i < _map.Enemies.Count; ++i)
             {
-                Enemy enemy = _enemies[i];
+                Enemy enemy = _map.Enemies[i];
                 if (_player.X == enemy.X
                     && _player.Y == enemy.Y)
                 {
@@ -118,22 +162,7 @@ namespace Roguelike
 
             if (killedEnemyIndex != -1)
             {
-                _enemies.RemoveAt(killedEnemyIndex);
-            }
-        }
-
-        private static void GenerateEnemies()
-        {
-            int enemyNumber = _random.Next(10, 20);
-            for (int i = 0; i < enemyNumber; ++i)
-            {
-                Enemy enemy = new Enemy()
-                {
-                    X = _random.Next(MAP_WIDTH - 1),
-                    Y = _random.Next(MAP_HEIGHT - 1)
-                };
-
-                _enemies.Add(enemy);
+                _map.Enemies.RemoveAt(killedEnemyIndex);
             }
         }
     }

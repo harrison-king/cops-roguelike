@@ -31,6 +31,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -38,6 +39,13 @@
     <Compile Include="Cop.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="Enemy.cs" />
+    <Compile Include="Map.cs" />
+    <Compile Include="MapGenerator.cs" />
+    <Compile Include="Console\ConsoleChar.cs" />
+    <Compile Include="Console\ConsoleScreen.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Folder Include="Console\" />
+  </ItemGroup>
 </Project>
